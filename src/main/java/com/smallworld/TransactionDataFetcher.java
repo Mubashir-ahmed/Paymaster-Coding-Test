@@ -1,11 +1,21 @@
 package com.smallworld;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-public class TransactionDataFetcher {
+public class TransactionDataFetcher 
+{
+    
+    public TransactionDataFetcher() throws IOException {
+        //String path =  System.getProperty("user.dir"); -- To verify the file path of Json File.
+        ObjectMapper objectMapper = new ObjectMapper();
+        Transactions[] transactions = objectMapper.readValue(new File("Transactions.json"), Transactions[].class);
+    }
 
     /**
      * Returns the sum of the amounts of all transactions
@@ -76,6 +86,19 @@ public class TransactionDataFetcher {
      */
     public Optional<Object> getTopSender() {
         throw new UnsupportedOperationException();
+    }
+
+    public static void main (String[] args)
+    {
+        try
+        {
+            TransactionDataFetcher transactionDataFetcher = new TransactionDataFetcher();
+        }
+
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
     }
 
 }
