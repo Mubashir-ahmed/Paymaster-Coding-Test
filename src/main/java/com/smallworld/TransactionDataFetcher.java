@@ -102,11 +102,16 @@ public class TransactionDataFetcher
     /**
      * Returns all transactions indexed by beneficiary name
      */
-    public Map<String, Transactions> getTransactionsByBeneficiaryName() {
-        Map<String,Transactions> beneficiaryTransactionMap = new HashMap<>();
+    public Map<String, List<Transactions>> getTransactionsByBeneficiaryName() {
+        Map<String,List<Transactions>> beneficiaryTransactionMap = new HashMap<>();
+        List<Transactions> beneficiaryTransactions = new ArrayList<>();
+        String beneficiaryName = null;
         for (Transactions transaction : transactions)
         {
-            beneficiaryTransactionMap.put(transaction.getBeneficiaryFullName(), transaction);
+            beneficiaryName = transaction.getBeneficiaryFullName();
+            beneficiaryTransactions = beneficiaryTransactionMap.getOrDefault(beneficiaryName, new ArrayList<>());
+            beneficiaryTransactions.add(transaction);
+            beneficiaryTransactionMap.put(beneficiaryName, beneficiaryTransactions);
         }
         return beneficiaryTransactionMap;
     }
@@ -149,10 +154,8 @@ public class TransactionDataFetcher
 
         List<Transactions> transactionList = Arrays.asList(transactions);
         transactionList.sort(Comparator.comparing(Transactions::getAmount).reversed());
-        if (transactionList.size() > 3) // To avoid Index Out Of Bound Exception
-        {
-            top3Transactions = transactionList.subList(0, 3);
-        }
+        int count = Math.min(transactionList.size(),3); // To avoid Index Out Of Bound Exception when sublisting
+        top3Transactions = transactionList.subList(0, count);
     
         return top3Transactions;
     }
@@ -163,6 +166,7 @@ public class TransactionDataFetcher
     public List<String> getTopSender() {
         List<String> topSender = new ArrayList<>(); // Using list considering there can be two senders with maximum amount
         Map<String,Double> senderTotalAmountMap = new HashMap<>();
+        String senderFullName = null;
         double maximum = 0;
 
         // At first stage, I retrived a map of sender and total amount of transactions they made counting only unique transactions
@@ -170,8 +174,9 @@ public class TransactionDataFetcher
         for (Transactions transaction : transactions)
         {
             if (!uniqueTransactions.contains(transaction.getMtn()))
-            {    
-                senderTotalAmountMap.put(transaction.getSenderFullName(), senderTotalAmountMap.getOrDefault(transaction.getSenderFullName(), 0.0)+transaction.getAmount());
+            {   
+                senderFullName = transaction.getSenderFullName();
+                senderTotalAmountMap.put(senderFullName, senderTotalAmountMap.getOrDefault(senderFullName, 0.0)+transaction.getAmount());
             }
             uniqueTransactions.add(transaction.getMtn());
         }
@@ -203,13 +208,14 @@ public class TransactionDataFetcher
             // List of unit test cases
             System.out.println("Sum of all unique transactions is : "+transactionDataFetcher.getTotalTransactionAmount());
             System.out.println("Maximum transaction amount is : "+transactionDataFetcher.getMaxTransactionAmount());
-            System.out.println("Total transaction amount sent by : "+transactionDataFetcher.getTotalTransactionAmountSentBy("Grace Burgess"));
-            System.out.println("Number of Unique Clients [including sender and beneficiary] : "+transactionDataFetcher.countUniqueClients());
-            System.out.println("Is this client has any open compliance issue : "+transactionDataFetcher.hasOpenComplianceIssues("Arthur Shelby"));
-            System.out.println("List of Unresolved Issue IDs are : "+transactionDataFetcher.getUnsolvedIssueIds());
+            System.out.println("Total transaction amount sent by : "+transactionDataFetcher.getTotalTransactionAmountSentBy("Tom Shelby"));
+            System.out.println("Number of unique clients [including sender and beneficiary] : "+transactionDataFetcher.countUniqueClients());
+            System.out.println("Is this client has any open compliance issue : "+transactionDataFetcher.hasOpenComplianceIssues("Aberama Gold"));
+            System.out.println("List of unresolved Issue IDs are : "+transactionDataFetcher.getUnsolvedIssueIds());
             System.out.println("List of all solved issue messages are : "+transactionDataFetcher.getAllSolvedIssueMessages());
-            System.out.println("List of Top senders are : "+transactionDataFetcher.getTopSender());
-            System.out.println("List of Top 3 senders are : "+transactionDataFetcher.getTop3TransactionsByAmount());
+            System.out.println("List of top senders are : "+transactionDataFetcher.getTopSender());
+            System.out.println("List of top 3 senders are : "+transactionDataFetcher.getTop3TransactionsByAmount());
+            System.out.println("List of Beneficiary transaction  : "+transactionDataFetcher.getTransactionsByBeneficiaryName());
         }
 
         catch (IOException e)   

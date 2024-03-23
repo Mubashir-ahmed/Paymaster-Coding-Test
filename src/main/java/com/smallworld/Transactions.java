@@ -1,5 +1,4 @@
 package com.smallworld;
-
 public class Transactions 
 {
     private Integer mtn;
