@@ -27,14 +27,9 @@ public class TransactionDataFetcher
      */
     public double getTotalTransactionAmount() {
         double sum = 0.0;
-        Set<Integer> uniqueTransactions = new HashSet<>();
-        for (Transactions transaction : transactions)
+        for (Transactions transaction : getUniqueTransactionsList())
         {
-            if (!uniqueTransactions.contains(transaction.getMtn()) )
-            {
-                sum = sum + transaction.getAmount();
-            }
-            uniqueTransactions.add(transaction.getMtn());
+            sum = sum + transaction.getAmount();
         }
         return sum;
     }
@@ -44,14 +39,12 @@ public class TransactionDataFetcher
      */
     public double getTotalTransactionAmountSentBy(String senderFullName) {
         double sum = 0.0;
-        Set<Integer> uniqueTransactions = new HashSet<>();
-        for (Transactions transaction : transactions)
+        for (Transactions transaction : getUniqueTransactionsList())
         {
-            if (!uniqueTransactions.contains(transaction.getMtn()) && transaction.getSenderFullName().equals(senderFullName))
+            if (transaction.getSenderFullName().equals(senderFullName))
             {
                 sum = sum + transaction.getAmount();
             }
-            uniqueTransactions.add(transaction.getMtn());
         }
         return sum;
     }
@@ -61,7 +54,7 @@ public class TransactionDataFetcher
      */
     public double getMaxTransactionAmount() {
         double maximum = 0.0;
-        for (Transactions transaction : transactions)
+        for (Transactions transaction : getUniqueTransactionsList())
         {
             maximum = Math.max(maximum , transaction.getAmount());
         }
@@ -74,7 +67,7 @@ public class TransactionDataFetcher
     public long countUniqueClients() {
         long count = 0;
         Set<String> nameOfClients = new HashSet<>();
-        for (Transactions transaction : transactions)
+        for (Transactions transaction : getUniqueTransactionsList())
         {
             nameOfClients.add(transaction.getBeneficiaryFullName());
             nameOfClients.add(transaction.getSenderFullName());
@@ -150,16 +143,7 @@ public class TransactionDataFetcher
      */
     public List<Transactions> getTop3TransactionsByAmount() {
         List<Transactions> top3Transactions = new ArrayList<>();
-        List<Transactions> uniqueTransactionList = new ArrayList<>();
-        Set<Integer> uniqueTransactions = new HashSet<>();
-        for (Transactions transaction : transactions)
-        {
-            if (!uniqueTransactions.contains(transaction.getMtn()) )
-            {
-                uniqueTransactionList.add(transaction);
-            }
-            uniqueTransactions.add(transaction.getMtn());
-        }
+        List<Transactions> uniqueTransactionList = getUniqueTransactionsList();
 
         uniqueTransactionList.sort(Comparator.comparing(Transactions::getAmount).reversed());
         int count = Math.min(uniqueTransactionList.size(),3); // To avoid Index Out Of Bound Exception when sublisting
@@ -178,15 +162,10 @@ public class TransactionDataFetcher
         double maximum = 0;
 
         // At first stage, I retrived a map of sender and total amount of transactions they made counting only unique transactions
-        Set<Integer> uniqueTransactions = new HashSet<>();
-        for (Transactions transaction : transactions)
+        for (Transactions transaction : getUniqueTransactionsList())
         {
-            if (!uniqueTransactions.contains(transaction.getMtn()))
-            {   
-                senderFullName = transaction.getSenderFullName();
-                senderTotalAmountMap.put(senderFullName, senderTotalAmountMap.getOrDefault(senderFullName, 0.0)+transaction.getAmount());
-            }
-            uniqueTransactions.add(transaction.getMtn());
+            senderFullName = transaction.getSenderFullName();
+            senderTotalAmountMap.put(senderFullName, senderTotalAmountMap.getOrDefault(senderFullName, 0.0)+transaction.getAmount());
         }
 
         // At Second stage we iterate over map to find the maximum value present
@@ -205,5 +184,21 @@ public class TransactionDataFetcher
         }
 
         return topSender;
+    }
+
+    public List<Transactions> getUniqueTransactionsList ()
+    {
+        List<Transactions> uniqueTransactionList = new ArrayList<>();
+        Set<Integer> uniqueTransactions = new HashSet<>();
+        for (Transactions transaction : transactions)
+        {
+            if (!uniqueTransactions.contains(transaction.getMtn()) )
+            {
+                uniqueTransactionList.add(transaction);
+            }
+            uniqueTransactions.add(transaction.getMtn());
+        }
+
+        return uniqueTransactionList;
     }
 }
