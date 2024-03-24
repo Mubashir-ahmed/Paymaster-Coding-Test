@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -125,7 +124,7 @@ public class TransactionDataFetcher
         {
             if (!transaction.isIssueSolved())
             {
-                openIssues.add(transaction.getMtn());
+                openIssues.add(transaction.getIssueId());
             }
         }    
         return openIssues;
@@ -151,11 +150,20 @@ public class TransactionDataFetcher
      */
     public List<Transactions> getTop3TransactionsByAmount() {
         List<Transactions> top3Transactions = new ArrayList<>();
+        List<Transactions> uniqueTransactionList = new ArrayList<>();
+        Set<Integer> uniqueTransactions = new HashSet<>();
+        for (Transactions transaction : transactions)
+        {
+            if (!uniqueTransactions.contains(transaction.getMtn()) )
+            {
+                uniqueTransactionList.add(transaction);
+            }
+            uniqueTransactions.add(transaction.getMtn());
+        }
 
-        List<Transactions> transactionList = Arrays.asList(transactions);
-        transactionList.sort(Comparator.comparing(Transactions::getAmount).reversed());
-        int count = Math.min(transactionList.size(),3); // To avoid Index Out Of Bound Exception when sublisting
-        top3Transactions = transactionList.subList(0, count);
+        uniqueTransactionList.sort(Comparator.comparing(Transactions::getAmount).reversed());
+        int count = Math.min(uniqueTransactionList.size(),3); // To avoid Index Out Of Bound Exception when sublisting
+        top3Transactions = uniqueTransactionList.subList(0, count);
     
         return top3Transactions;
     }
@@ -198,30 +206,4 @@ public class TransactionDataFetcher
 
         return topSender;
     }
-
-    public static void main (String[] args)
-    {
-        try
-        {
-            TransactionDataFetcher transactionDataFetcher = new TransactionDataFetcher();
-
-            // List of unit test cases
-            System.out.println("Sum of all unique transactions is : "+transactionDataFetcher.getTotalTransactionAmount());
-            System.out.println("Maximum transaction amount is : "+transactionDataFetcher.getMaxTransactionAmount());
-            System.out.println("Total transaction amount sent by : "+transactionDataFetcher.getTotalTransactionAmountSentBy("Tom Shelby"));
-            System.out.println("Number of unique clients [including sender and beneficiary] : "+transactionDataFetcher.countUniqueClients());
-            System.out.println("Is this client has any open compliance issue : "+transactionDataFetcher.hasOpenComplianceIssues("Aberama Gold"));
-            System.out.println("List of unresolved Issue IDs are : "+transactionDataFetcher.getUnsolvedIssueIds());
-            System.out.println("List of all solved issue messages are : "+transactionDataFetcher.getAllSolvedIssueMessages());
-            System.out.println("List of top senders are : "+transactionDataFetcher.getTopSender());
-            System.out.println("List of top 3 senders are : "+transactionDataFetcher.getTop3TransactionsByAmount());
-            System.out.println("List of Beneficiary transaction  : "+transactionDataFetcher.getTransactionsByBeneficiaryName());
-        }
-
-        catch (IOException e)   
-        {
-            e.printStackTrace();
-        }
-    }
-
 }
